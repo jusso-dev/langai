@@ -1,0 +1,69 @@
+name: Verify MVP
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HF_HUB_OFFLINE: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      DO_NOT_TRACK: "1"
+      OMP_NUM_THREADS: "2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install uv==0.11.28
+      - run: uv sync --frozen --extra ml --extra dev
+      - run: uv pip install -e packages/sdk-python
+      - run: uv run --no-sync ruff check apps ml cli tests scripts
+      - run: uv run --no-sync ruff format --check apps ml cli tests scripts
+      - run: uv run --no-sync pytest -q
+      - run: uv build && uv build packages/sdk-python
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck && npm run build
+  containers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      COMPOSE_PROJECT_NAME: langai-ci
+      COMPOSE_FILE: compose.yaml:infra/compose.verify.yaml
+      LANGAI_GIT_COMMIT: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/setup_env.py
+      - run: docker compose config --quiet
+      - run: docker compose build
+      - run: docker compose up -d --wait --wait-timeout 180
+      - run: docker compose --profile verify run --rm smoke
+      - run: docker compose exec -T api python scripts/check_backing_services.py
+      - run: docker compose --profile verify run --build --rm browser-tests
+      - name: Show sanitized diagnostics
+        if: failure()
+        run: docker compose ps -a && docker compose logs --tail 80 api worker dispatcher web migrate storage-init
+      - name: Remove isolated verification resources
+        if: always()
+        run: docker compose down --volumes --remove-orphans

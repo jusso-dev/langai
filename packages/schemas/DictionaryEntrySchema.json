@@ -1,0 +1,112 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "language_id": {
+      "title": "Language Id",
+      "type": "string"
+    },
+    "source_id": {
+      "title": "Source Id",
+      "type": "string"
+    },
+    "row_number": {
+      "title": "Row Number",
+      "type": "integer"
+    },
+    "original_row": {
+      "additionalProperties": true,
+      "title": "Original Row",
+      "type": "object"
+    },
+    "headword": {
+      "title": "Headword",
+      "type": "string"
+    },
+    "normalized_headword": {
+      "title": "Normalized Headword",
+      "type": "string"
+    },
+    "definitions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Definitions",
+      "type": "array"
+    },
+    "alternate_spellings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Alternate Spellings",
+      "type": "array"
+    },
+    "part_of_speech": {
+      "title": "Part Of Speech",
+      "type": "string"
+    },
+    "dialect": {
+      "title": "Dialect",
+      "type": "string"
+    },
+    "examples": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Examples",
+      "type": "array"
+    },
+    "notes": {
+      "title": "Notes",
+      "type": "string"
+    },
+    "source": {
+      "title": "Source",
+      "type": "string"
+    },
+    "metadata": {
+      "additionalProperties": true,
+      "title": "Metadata",
+      "type": "object"
+    },
+    "approved": {
+      "title": "Approved",
+      "type": "boolean"
+    },
+    "training_eligible": {
+      "title": "Training Eligible",
+      "type": "boolean"
+    },
+    "issues": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Issues",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "language_id",
+    "source_id",
+    "row_number",
+    "original_row",
+    "headword",
+    "normalized_headword",
+    "definitions",
+    "alternate_spellings",
+    "part_of_speech",
+    "dialect",
+    "examples",
+    "notes",
+    "source",
+    "metadata",
+    "approved",
+    "training_eligible",
+    "issues"
+  ],
+  "title": "DictionaryEntrySchema",
+  "type": "object"
+}

@@ -1,0 +1,15 @@
+# Data governance
+
+A workspace is private by default and V1 provides no public-sharing operation. Every source records owner, custodian, source, licence, training permission, commercial-use permission, redistribution permission and attribution. None of these defaults to permission. A source can be imported for review without training permission; it cannot be approved for training or used to create a training dataset.
+
+Dataset snapshots copy the governance record. A training run must use an approved, permission-bearing snapshot. Derived model records and artifacts remain PRIVATE. Changing language metadata does not rewrite historical dataset permissions. Use a new source version for corrected entries or permissions, preserving the earlier record.
+
+API keys are hashed in PostgreSQL. Owners manage keys, approve models and deploy. Editors create languages, import/review dictionaries, create datasets and train. Viewers can read and query within their workspace. There is no anonymous dictionary, model, vector or artifact endpoint. Language IDs or slugs are always resolved within the requesting key's workspace. Cross-language dataset creation is rejected even when both languages belong to the same workspace.
+
+A viewer key currently grants access to **all** languages in the workspace, including source/artifact downloads. Fine-grained, per-language/cultural access rules and embargoed knowledge require a future authorization layer; use a separate deployment/workspace when access groups must be separated now. Never upload material that the chosen deployment's authorized readers are not permitted to see.
+
+Model queries execute locally. Source text and embeddings are not submitted to OpenAI, Anthropic, Gemini or other hosted AI services. Upstream model lookup/download sends only the configured model ID/revision. Telemetry is disabled. For disconnected installations, prefetch approved model files and enable local-only mode; enforce network egress controls at the infrastructure boundary if an enforceable offline guarantee is required.
+
+Commercial and redistribution permissions are retained in lineage and shown to operators. V1 cannot infer whether an arbitrary API caller is using results commercially, or stop an authorized viewer copying an artifact. Do not equate a stored permission flag with downstream legal enforcement. The owner controls deployment, access and permitted usage and should involve the relevant community/custodian in those decisions.
+
+The object bucket uses private credentials and versioning; originals are content-hashed and never overwritten by a normalization operation. Audit events record explicit source/model approvals, dataset generation, training and deployment. No deletion API is provided in V1. Retention, custodial withdrawal, access revocation, and removal of derived artifacts need an operator-managed procedure covering database, model caches, object versions and backups. Before accepting sensitive real dictionaries, establish that procedure with the data owner.

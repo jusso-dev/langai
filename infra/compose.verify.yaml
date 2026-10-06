@@ -1,0 +1,58 @@
+# Run with: docker compose -p langai-verify -f compose.yaml -f infra/compose.verify.yaml ...
+# Dedicated volumes/network and NO published host ports. Never use production credentials.
+x-verification: &verification
+  env_file: !reset []
+  environment:
+    LANGAI_BOOTSTRAP_TOKEN: ${LANGAI_BOOTSTRAP_TOKEN:?Generate verification credentials first}
+    LANGAI_S3_ACCESS_KEY: ${LANGAI_S3_ACCESS_KEY}
+    LANGAI_S3_SECRET_KEY: ${LANGAI_S3_SECRET_KEY}
+    LANGAI_S3_BUCKET: langai-verification
+    LANGAI_ALLOW_TEST_ENCODER: "true"
+    LANGAI_ENABLE_EXPERIMENTAL: "true"
+    LANGAI_LOCAL_FILES_ONLY: "false"
+    OMP_NUM_THREADS: "2"
+    MKL_NUM_THREADS: "2"
+services:
+  postgres:
+    ports: !reset []
+  redis:
+    ports: !reset []
+  object-store:
+    ports: !reset []
+  migrate:
+    <<: *verification
+  storage-init:
+    <<: *verification
+  api:
+    <<: *verification
+    ports: !reset []
+  dispatcher:
+    <<: *verification
+  worker:
+    <<: *verification
+  web:
+    ports: !reset []
+    environment:
+      LANGAI_COOKIE_SECURE: "false"
+      LANGAI_WEB_ORIGIN: http://web:3100
+  smoke:
+    image: ${LANGAI_PYTHON_IMAGE:-langai-python:local}
+    profiles: [verify]
+    environment:
+      LANGAI_API_URL: http://api:8100
+      LANGAI_API_KEY: ${LANGAI_BOOTSTRAP_TOKEN}
+    command: [python, scripts/integration_smoke.py]
+    depends_on:
+      api: {condition: service_healthy}
+      worker: {condition: service_started}
+      dispatcher: {condition: service_started}
+  browser-tests:
+    profiles: [verify]
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.e2e
+    environment:
+      LANGAI_E2E_URL: http://web:3100
+      LANGAI_E2E_TOKEN: ${LANGAI_BOOTSTRAP_TOKEN}
+    depends_on:
+      web: {condition: service_started}

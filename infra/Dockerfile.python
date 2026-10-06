@@ -1,0 +1,21 @@
+FROM python:3.12-slim
+ARG LANGAI_GIT_COMMIT=unknown
+ENV LANGAI_GIT_COMMIT=$LANGAI_GIT_COMMIT
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 HF_HUB_DISABLE_TELEMETRY=1 DO_NOT_TRACK=1 TOKENIZERS_PARALLELISM=false
+WORKDIR /app
+RUN pip install --no-cache-dir uv==0.11.28
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --extra ml --no-dev --no-install-project --no-cache
+COPY apps/__init__.py apps/__init__.py
+COPY apps/api apps/api
+COPY apps/worker apps/worker
+COPY ml ml
+COPY cli cli
+RUN uv sync --frozen --extra ml --no-dev --no-cache
+COPY alembic.ini ./
+COPY infra/migrations infra/migrations
+COPY scripts scripts
+RUN useradd -m -u 10001 langai && mkdir -p /app/data /home/langai/.cache && chown -R langai:langai /app/data /home/langai/.cache
+USER langai
+ENV PATH="/app/.venv/bin:$PATH"
+CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8100"]

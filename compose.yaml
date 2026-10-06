@@ -1,0 +1,112 @@
+name: langai
+x-python: &python
+  image: ${LANGAI_PYTHON_IMAGE:-langai-python:local}
+  build:
+    context: .
+    dockerfile: infra/Dockerfile.python
+    args:
+      LANGAI_GIT_COMMIT: ${LANGAI_GIT_COMMIT:-unknown}
+  env_file: .env
+  environment: &python-env
+    LANGAI_DATABASE_URL: postgresql+psycopg://langai:${POSTGRES_PASSWORD:-langai-local}@postgres:5432/langai
+    LANGAI_REDIS_URL: redis://redis:6379/0
+    LANGAI_STORAGE_BACKEND: s3
+    LANGAI_S3_ENDPOINT: http://object-store:9000
+    LANGAI_ARTIFACT_DIR: /app/data/artifacts
+  volumes:
+    - artifacts:/app/data
+    - model-cache:/home/langai/.cache
+  restart: unless-stopped
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: langai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-langai-local}
+      POSTGRES_DB: langai
+    ports: ["127.0.0.1:55439:5432"]
+    volumes: ["postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langai"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:56379:6379"]
+    volumes: ["redis:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  object-store:
+    image: rustfs/rustfs:1.0.1
+    command: ["/data"]
+    environment:
+      RUSTFS_ACCESS_KEY: ${LANGAI_S3_ACCESS_KEY}
+      RUSTFS_SECRET_KEY: ${LANGAI_S3_SECRET_KEY}
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: error
+    ports: ["127.0.0.1:59000:9000", "127.0.0.1:59001:9001"]
+    volumes: ["objects:/data"]
+    restart: unless-stopped
+  storage-init:
+    <<: *python
+    command: ["python", "scripts/init_storage.py"]
+    depends_on: [object-store]
+    restart: "no"
+  migrate:
+    <<: *python
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+  api:
+    <<: *python
+    ports: ["127.0.0.1:8100:8100"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      storage-init: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  dispatcher:
+    <<: *python
+    command: ["python", "-m", "apps.worker.main", "--dispatch"]
+    depends_on:
+      api: {condition: service_healthy}
+      redis: {condition: service_healthy}
+  worker:
+    <<: *python
+    command: ["python", "-m", "apps.worker.main"]
+    stop_grace_period: 60s
+    depends_on:
+      api: {condition: service_healthy}
+      redis: {condition: service_healthy}
+  web:
+    image: ${LANGAI_WEB_IMAGE:-langai-web:local}
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.web
+    environment:
+      LANGAI_API_URL: http://api:8100
+      LANGAI_COOKIE_SECURE: ${LANGAI_COOKIE_SECURE:-false}
+      LANGAI_WEB_ORIGIN: ${LANGAI_WEB_ORIGIN:-}
+    ports: ["127.0.0.1:3100:3100"]
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+volumes:
+  postgres:
+  redis:
+  objects:
+  artifacts:
+  model-cache:
