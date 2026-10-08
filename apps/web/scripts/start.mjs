@@ -9,6 +9,9 @@ if (!existsSync(path.join(standalone, "server.js"))) {
 cpSync(path.join(root, ".next/static"), path.join(standalone, ".next/static"), {
   recursive: true,
 });
+cpSync(path.join(root, "public"), path.join(standalone, "public"), {
+  recursive: true,
+});
 const child = spawn(process.execPath, [path.join(standalone, "server.js")], {
   stdio: "inherit",
   env: {

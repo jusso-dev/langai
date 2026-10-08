@@ -9,7 +9,7 @@ from apps.api.db import session
 from apps.api.models import AuditEvent, Dataset, Entry, Identity, Language, ModelRecord
 from apps.api.schemas import KeyCreate, LanguageCreate
 from apps.api.serialization import serialize
-from apps.api import datasets, dictionaries, inference, training
+from apps.api import datasets, dictionaries, inference, offline, training
 
 
 @asynccontextmanager
@@ -24,7 +24,7 @@ app = FastAPI(
     lifespan=lifespan,
     description="Private dictionary representation training. Lexical knowledge is not conversational fluency.",
 )
-for router in [dictionaries.router, datasets.router, training.router, inference.router]:
+for router in [dictionaries.router, datasets.router, training.router, inference.router, offline.router]:
     app.include_router(router)
 
 

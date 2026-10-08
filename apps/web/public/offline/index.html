@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#24473b" />
+    <meta
+      name="description"
+      content="Your dictionary and phrases, available on your phone offline."
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <link rel="stylesheet" href="./style.css" />
+    <title>LangAI · Offline dictionary</title>
+  </head>
+  <body>
+    <main>
+      <header><a href="/">LangAI</a><span>ON YOUR PHONE</span></header>
+      <h1>Your words.<br />Always with you.</h1>
+      <p>
+        Look up words and phrases in your approved dictionary. Every answer
+        comes from an entry you supplied.
+      </p>
+      <p id="availability" role="status">Preparing offline access…</p>
+      <section aria-labelledby="setup-heading">
+        <h2 id="setup-heading">Keep a dictionary on this phone</h2>
+        <ol>
+          <li>
+            In your workspace, open <strong>Offline phone</strong> and export an
+            approved dictionary pack. Save it to Files.
+          </li>
+          <li>
+            On iPhone, open this page in Safari, tap Share → Add to Home Screen,
+            then open the installed app while online.
+          </li>
+          <li>
+            Import your pack below. Wait for “Ready for offline use”, then try
+            airplane mode.
+          </li>
+        </ol>
+        <label class="import-label" for="pack">Import dictionary pack</label>
+        <input id="pack" type="file" accept=".json,application/json" />
+        <p class="small">
+          Import saves a private copy on this device and replaces the previous
+          pack. Keep your export in Files as a backup; clearing website data
+          removes the saved dictionary. Workspace sign-out does not remove this
+          copy.
+        </p>
+      </section>
+      <p id="error" role="alert" hidden></p>
+      <section id="dictionary" hidden aria-labelledby="language">
+        <div class="heading">
+          <h2 id="language"></h2>
+          <button id="remove" type="button">Remove from phone</button>
+        </div>
+        <p id="details" class="small"></p>
+        <form id="lookup">
+          <label for="direction">Search direction</label>
+          <select id="direction">
+            <option value="both">Words and meanings</option>
+            <option value="word-to-meaning">Word or phrase → meaning</option>
+            <option value="meaning-to-word">Meaning → word or phrase</option>
+          </select>
+          <label for="query">Word, phrase or meaning</label>
+          <input
+            id="query"
+            type="search"
+            maxlength="256"
+            autocomplete="off"
+            placeholder="Search your dictionary…"
+          />
+          <button type="submit" id="search">Find matches</button>
+        </form>
+        <p class="small">
+          Exact matches ignore case and repeated spaces. Spelling and phrase
+          suggestions need your review. This matcher cannot infer new
+          translations or understand paraphrases with no shared wording.
+        </p>
+        <p id="result-status" role="status"></p>
+        <div id="results"></div>
+        <details>
+          <summary>Sources and permissions</summary>
+          <div id="sources"></div>
+        </details>
+      </section>
+      <footer>
+        Search runs entirely on this device. No account or network is needed
+        after setup.
+      </footer>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

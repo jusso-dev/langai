@@ -16,6 +16,7 @@ import {
   Plus,
   Settings2,
   Sparkles,
+  Smartphone,
   Terminal,
   Workflow,
 } from "lucide-react";
@@ -32,6 +33,7 @@ import {
 import { Action, Badge, Empty, ErrorNotice, Loading, Private } from "./ui";
 import { LanguageForm, SettingsView } from "./language";
 import { DictionaryView } from "./dictionary";
+import { OfflineView } from "./offline";
 import {
   DatasetsView,
   TrainingView,
@@ -42,6 +44,7 @@ const sections = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "dictionary", label: "Dictionary", icon: BookOpen },
   { id: "datasets", label: "Datasets", icon: Database },
+  { id: "offline", label: "Offline phone", icon: Smartphone },
   { id: "training", label: "Training", icon: Workflow },
   { id: "models", label: "Models", icon: Boxes },
   { id: "playground", label: "Playground", icon: FlaskConical },
@@ -341,6 +344,8 @@ export function Workspace({
                             "Preserve the source. Review the details. Approve what can be learned.",
                           datasets:
                             "Frozen snapshots with every sample linked to its source.",
+                          offline:
+                            "Export a compact dictionary and use it on your phone without internet.",
                           training:
                             "Train locally. Compare honestly. Keep the full record.",
                           models:
@@ -379,6 +384,8 @@ export function Workspace({
                   refresh={refresh}
                   canEdit={canEdit}
                 />
+              ) : section === "offline" ? (
+                <OfflineView language={language} sources={sources} />
               ) : section === "training" ? (
                 <TrainingView
                   language={language}

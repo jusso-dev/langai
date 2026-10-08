@@ -1784,6 +1784,61 @@
         }
       }
     },
+    "/languages/{language_id}/offline-export": {
+      "post": {
+        "tags": [
+          "Offline dictionary"
+        ],
+        "summary": "Export Offline",
+        "operationId": "export_offline_languages__language_id__offline_export_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "language_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Language Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfflineExportCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -2868,6 +2923,25 @@
         "additionalProperties": false,
         "type": "object",
         "title": "Normalization"
+      },
+      "OfflineExportCreate": {
+        "properties": {
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Source Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_ids"
+        ],
+        "title": "OfflineExportCreate"
       },
       "Query": {
         "properties": {

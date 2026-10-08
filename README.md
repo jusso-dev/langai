@@ -33,6 +33,15 @@ Run Compose against your intended Docker context. Published development ports bi
 8. **Approve, then deploy.** Only an owner can do this. Deployment builds headword, definition and combined-entry vectors, then atomically switches the active model.
 9. **Query.** All inference endpoints require a key and an explicit language. A request cannot silently choose or mix languages.
 
+## Offline dictionary on iPhone
+
+For word and phrase mapping, open **Offline phone**, export approved sources,
+then install the linked dictionary web app on the iPhone Home Screen and import
+the pack from Files. Exact lookup, variants, reverse lookup and labelled spelling/
+phrase suggestions run entirely on the phone after setup. No LLM or training job
+is needed. The workspace still requires connectivity; the separate offline app
+requires HTTPS for installation. See [setup, matching rules and privacy](docs/offline-dictionary.md).
+
 ## Repository
 
 ```text
