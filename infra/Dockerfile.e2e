@@ -4,4 +4,6 @@ COPY apps/web/package*.json ./
 RUN npm ci && npx playwright install --with-deps chromium
 COPY apps/web/playwright.config.ts ./
 COPY apps/web/e2e ./e2e
+# The offline specs serve the static offline app from ./public/offline.
+COPY apps/web/public/offline ./public/offline
 CMD ["npx", "playwright", "test"]
